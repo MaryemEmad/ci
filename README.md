@@ -16,7 +16,7 @@ fa_clustering.py: Implements Firefly Algorithm (FA) for clustering.
 
 de_clustering.py: Implements Differential Evolution (DE) for clustering.
 
-experiment_runner.py: Tests each algorithm by running it 30 times for each setting (e.g., different mutation rates for GA). It measures performance (clustering quality, speed, and time taken) and saves random seeds so we can rerun the tests and get the same results.
+experiment_runner.py: Tests each algorithm by running it several times for each setting (e.g., different mutation rates for GA). It measures performance (clustering quality, speed, and time taken) and saves random seeds so we can rerun the tests and get the same results.
 
 visualization.py: Generates scatter plots for clustering results.
 
