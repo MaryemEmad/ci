@@ -1,6 +1,6 @@
 # ci
 
-main.py: Entry point to run experiments and launch the UI. It imports all algorithms and coordinates the workflow.
+main.py: Coordinates the workflow (loads data, runs experiments, launches UI).
 
 data_loader.py: Loads and preprocesses the Mall Customers dataset (standardizes Annual Income and Spending Score).
 
