@@ -5,7 +5,7 @@ from kmeans_clustering import KMeansClustering
 from ga_clustering import GAClustering
 from aco_clustering import ACOClustering
 from abc_clustering import ABCClustering
-from fa_clustering import FAClustering
+from acokmeans_clustering import ACOKMeansClustering
 from de_clustering import DEClustering
 from visualization import plot_clusters_2d, plot_clusters_3d, plot_elbow
 from ui import start_ui
@@ -28,7 +28,7 @@ def main():
         "GA": GAClustering(n_clusters=4, random_state=main_seed),
         "ACO": ACOClustering(n_clusters=4, random_state=main_seed),
         "ABC": ABCClustering(n_clusters=4, random_state=main_seed),
-        "FA": FAClustering(n_clusters=4, random_state=main_seed),
+        "ACO+K-means": ACOKMeansClustering(n_clusters=4, random_state=main_seed),
         "DE": DEClustering(n_clusters=4, random_state=main_seed)
     }
 
