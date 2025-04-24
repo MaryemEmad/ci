@@ -1,7 +1,7 @@
 # Customer Segmentation using Computational Intelligence (CI) Algorithms
 
 This project implements and compares various Computational Intelligence (CI) algorithms for customer segmentation, including:
-- K-means (baseline, fully implemented - DO NOT MODIFY)
+- K-means (baseline, fully implemented )
 - Genetic Algorithm (GA)
 - Ant Colony Optimization (ACO)
 - Artificial Bee Colony (ABC)
