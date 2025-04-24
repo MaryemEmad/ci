@@ -1,35 +1,39 @@
-# fa_clustering.py: Implements Firefly Algorithm for clustering
+# acokmeans_clustering.py: Implements ACO+K-means hybrid approach for clustering
 import numpy as np
 
-class FAClustering:
-    def __init__(self, n_clusters=4, max_iter=100, n_fireflies=50, 
-                 alpha=0.5, beta_0=1.0, gamma=1.0, random_state=None):
+class ACOKMeansClustering:
+    def __init__(self, n_clusters=4, max_iter=100, n_ants=10, 
+                 alpha=1.0, beta=2.0, evaporation_rate=0.5, 
+                 kmeans_refinement=True, random_state=None):
         """
-        Initialize Firefly Algorithm for clustering.
+        Initialize ACO+K-means hybrid approach for clustering.
         
         Parameters:
         -----------
         n_clusters : int
             Number of clusters to form
         max_iter : int
-            Maximum number of iterations
-        n_fireflies : int
-            Number of fireflies in the population
+            Maximum number of iterations for ACO
+        n_ants : int
+            Number of ants in the colony
         alpha : float
-            Randomization parameter (0 to 1)
-        beta_0 : float
-            Attractiveness at distance 0
-        gamma : float
-            Light absorption coefficient
+            Pheromone importance factor
+        beta : float
+            Heuristic information importance factor
+        evaporation_rate : float
+            Pheromone evaporation rate (0 to 1)
+        kmeans_refinement : bool
+            Whether to refine ACO results with K-means
         random_state : int
             Random seed for reproducibility
         """
         self.n_clusters = n_clusters
         self.max_iter = max_iter
-        self.n_fireflies = n_fireflies
+        self.n_ants = n_ants
         self.alpha = alpha
-        self.beta_0 = beta_0
-        self.gamma = gamma
+        self.beta = beta
+        self.evaporation_rate = evaporation_rate
+        self.kmeans_refinement = kmeans_refinement
         self.random_state = random_state
         
         # These will be set during fitting
@@ -53,21 +57,23 @@ class FAClustering:
             
         Implementation details:
         ----------------------
-        1. Initialize fireflies (cluster centroids) randomly
-        2. For each iteration (up to max_iter):
-           a. Calculate attractiveness between fireflies
-           b. Move less bright fireflies toward brighter ones
-           c. Apply random movement to all fireflies
-           d. Update brightness based on fitness (clustering quality)
-           e. Keep track of best solution found so far
-        3. Calculate cluster assignments from best firefly
-        4. Return cluster assignments
+        1. Use ACO to find initial centroids or cluster assignments:
+           a. Initialize pheromone trails and heuristic information
+           b. For each iteration (up to max_iter):
+              i. Ants construct solutions (cluster assignments)
+              ii. Evaluate solutions quality
+              iii. Update pheromone trails
+              iv. Apply pheromone evaporation
+        2. Refine the ACO results using K-means:
+           a. Use centroids from ACO as initial centroids for K-means
+           b. Run K-means for a few iterations to refine the solution
+        3. Return the final cluster assignments
         """
         # Set random seed if provided
         if self.random_state is not None:
             np.random.seed(self.random_state)
             
-        # Placeholder implementation - Replace with your FA implementation
+        # Placeholder implementation - Replace with your ACO+K-means implementation
         # This simply calls K-means for now to avoid errors in the main program
         from sklearn.cluster import KMeans
         kmeans = KMeans(n_clusters=self.n_clusters, random_state=self.random_state)
@@ -78,4 +84,4 @@ class FAClustering:
         
     def get_centroids(self):
         """Return the cluster centers."""
-        return self.centroids
+        return self.centroids 
