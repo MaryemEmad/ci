@@ -8,19 +8,6 @@ This project implements and compares various Computational Intelligence (CI) alg
 - ACO+K-means (hybrid approach)
 - Differential Evolution (DE)
 
-## Setup
-
-1. Create a virtual environment (recommended):
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
 ## Usage
 
 Two options to run the program:
