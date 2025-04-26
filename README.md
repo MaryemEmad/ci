@@ -14,7 +14,7 @@ This project implements and compares several clustering algorithms:
 - Statistical analysis with multiple runs and error quantification
 - Performance metrics calculation (Silhouette Score, Inertia, Execution Time)
 - Visualization tools for clustering results and performance comparison
-- Example scripts demonstrating algorithm usage
+
 
 ## Key Experiments
 
@@ -112,5 +112,139 @@ All experiments are run multiple times with different random seeds to ensure sta
 - **σ² value (0.1-100.0)**: Controls the width of the Gaussian kernel
   - Lower values make the algorithm more sensitive to local structures
   - Higher values create smoother decision boundaries
+
+## Examples
+
+The `examples` directory contains sample scripts demonstrating how to use these algorithms with different datasets:
+
+- `compare_algorithms.py`: Compares both algorithms on blob-shaped and moon-shaped datasets
+
+## Code Structure and Development Guide
+
+### Project Structure
+
+- **Algorithm Implementations**:
+  - `kmeans_clustering.py`: K-means implementation (wrapper around scikit-learn)
+  - `fcm_clustering.py`: Fuzzy C-Means implementation
+  - `gkfcm_clustering.py`: Gustafson-Kessel FCM implementation
+  - `kfcm_clustering.py`: Kernel FCM implementation
+  - `mkfcm_clustering.py`: Modified Kernel FCM implementation
+
+- **Core components**:
+  - `data_loader.py`: Loads and preprocesses the Mall Customers dataset
+  - `run.py`: Main script that runs all experiments and generates visualizations
+  - `visualization.py`: Functions for creating plots and visualizations
+
+
+
+
+## Detailed File-by-File Guide
+
+For teammates completely new to this codebase, here's a detailed breakdown of each file:
+
+### Core Files
+
+#### `run.py`
+The main execution script that orchestrates all experiments and visualizations.
+- **Key Functions**:
+  - `main()`: Entry point that runs all experiments sequentially
+  - `run_kmeans_fcm_comparison()`: Compares K-means and FCM algorithms
+  - `run_fcm_m_comparison()`: Studies the effect of the fuzzy coefficient m
+  - `run_kmeans_init_comparison()`: Compares K-means initialization methods
+  - `run_fcm_gkfcm_comparison()`: Compares FCM and GK-FCM algorithms
+  - `run_all_fuzzy_comparison()`: Compares all fuzzy algorithms
+  - `run_kernel_sigma_comparison()`: Studies the effect of the kernel width parameter σ²
+- **Outputs**: Creates all visualization files in the root directory
+- **How to Use**: Simply run `python run.py` to execute all experiments
+
+#### `data_loader.py`
+Loads and preprocesses the Mall Customers dataset.
+- **Key Functions**:
+  - `load_mall_customers_data()`: Loads data, creates 2D and 3D feature sets, and performs normalization
+- **Returns**: Original dataframe, 2D features, 3D features, and scalers for inverse transformation
+- **Note**: Expects "Mall_Customers.csv" file in the project directory
+
+#### `visualization.py`
+Contains all visualization functions for creating plots and charts.
+- **Key Functions**:
+  - `plot_clusters_2d()` / `plot_clusters_3d()`: Create cluster visualizations
+  - `compare_kmeans_fcm()`: Side-by-side comparison of two algorithms
+  - `plot_fcm_m_comparison()`: Visualize the effect of the m parameter
+  - `plot_convergence_curves()`: Show algorithm convergence over iterations
+  - `compare_fuzzy_metrics()`: Compare metrics across algorithms with bar charts
+  - `compare_fuzzy_metrics_with_error_bars()`: Enhanced comparison with statistical error bars
+  - `plot_sigma_parameter_study()`: Analyze the effect of σ² parameter with trend lines
+- **Dependencies**: Requires matplotlib and numpy
+
+### Algorithm Implementations
+
+#### `kmeans_clustering.py`
+K-means implementation (wrapper around scikit-learn).
+- **Key Methods**:
+  - `__init__()`: Initialize with n_clusters, init_method, etc.
+  - `fit(data)`: Run clustering and return labels
+  - `predict(data)`: Predict cluster for new data
+  - `compute_fitness(data)`: Calculate inertia (within-cluster sum of squares)
+  - `get_centroids()`: Return final cluster centers
+- **Note**: No real convergence history is available from scikit-learn's implementation
+
+#### `fcm_clustering.py`
+Fuzzy C-Means implementation.
+- **Key Methods**:
+  - `fit(data)`: Run FCM algorithm with membership updates
+  - `update_centroids()`: Calculate new centroids based on fuzzy memberships
+  - `update_membership()`: Update membership matrix
+  - `_calculate_inertia()`: Calculate fuzzy inertia objective function
+  - `get_fitness_history()`: Return convergence history for visualization
+- **Parameters**: n_clusters, m (fuzziness coefficient), max_iter, tolerance
+
+#### `gkfcm_clustering.py`
+Gustafson-Kessel FCM that can detect non-spherical clusters.
+- **Key Methods**: 
+  - Similar to FCM but adds:
+  - `update_covariance_matrices()`: Calculate cluster-specific covariance
+  - `calculate_mahalanobis_distance()`: Distance measure for elliptical clusters
+  - `calculate_norm_matrices()`: Normalization factors for covariance
+- **Difference from FCM**: Uses Mahalanobis distance instead of Euclidean distance
+
+#### `kfcm_clustering.py`
+Kernel Fuzzy C-Means for non-linearly separable clusters.
+- **Key Methods**:
+  - `gaussian_kernel()`: Implements Gaussian kernel function
+  - `fit(data)`: Runs the kernelized version of FCM
+  - `update_centroids_kernel()`: Updates centroids in kernel space
+- **Parameters**: Adds sigma_squared (kernel width parameter)
+
+#### `mkfcm_clustering.py`
+Modified Kernel FCM with improved convergence.
+- **Key Methods**:
+  - Similar to KFCM but with modified objective function
+  - Different update rules for centroids and memberships
+- **Difference from KFCM**: Centroids are computed in feature space first
+
+### Data and Examples
+
+#### `Mall_Customers.csv`
+The main dataset used for all experiments.
+- **Features**:
+  - "CustomerID"
+  - "Gender"
+  - "Age"
+  - "Annual Income (k$)"
+  - "Spending Score (1-100)"
+- **Used Features for Clustering**:
+  - 2D: "Annual Income" and "Spending Score"
+  - 3D: "Age", "Annual Income", and "Spending Score"
+
+### Code Relationships and Flow
+
+1. `run.py` begins execution and calls `data_loader.py` to get the dataset
+2. It then runs each experiment function, which:
+   - Initializes algorithm instances from the appropriate clustering files
+   - Runs multiple iterations with different random seeds
+   - Collects metrics and results
+3. For each experiment, it calls visualization functions from `visualization.py`
+4. All results are saved as image files in the project directory
+
 
 
