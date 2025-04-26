@@ -23,7 +23,6 @@ class KMeansClustering:
         self.init_method = init_method  # 'k-means++' or 'random'
         self.random_state = random_state
         self.max_iter = max_iter
-        self.fitness_history = []  # Track fitness values over iterations
         self.model = KMeans(
             n_clusters=n_clusters,
             init=init_method,
@@ -47,47 +46,13 @@ class KMeansClustering:
         labels : array
             Cluster labels
         """
-        # Reset fitness history
-        self.fitness_history = []
-        
-        # Store initial data for convergence monitoring
+        # Store initial data for reference
         self._data = data
         
         # Fit the model
         self.model.fit(data)
         
-        # Compute fitness history (not directly available from sklearn)
-        # We'll approximate it by manually computing distance at each stage
-        self._approximate_fitness_history()
-        
         return self.model.labels_
-
-    def _approximate_fitness_history(self):
-        """Approximate fitness history from final clustering"""
-        # Best we can do is simulate convergence with final values
-        # For actual convergence tracking, we'd need to modify sklearn.KMeans
-        
-        # Start with a rough "starting" inertia value (can be up to 2x final)
-        self.fitness_history = [self.model.inertia_ * (1.5 + 0.5 * np.random.random())]
-        
-        # Generate a decreasing curve
-        n_iters = self.model.n_iter_
-        # Ensure at least two points in history
-        if n_iters < 2:
-            n_iters = 2
-            
-        for i in range(1, n_iters):
-            # Exponential decay curve with some noise
-            progress = i / (n_iters - 1)
-            remaining = 1 - progress
-            decay_factor = remaining**2
-            inertia = self.model.inertia_ * (1 + decay_factor * 0.5)
-            # Add some noise to make it more realistic
-            noise = 0.05 * inertia * (np.random.random() - 0.5)
-            self.fitness_history.append(inertia + noise)
-        
-        # Replace last value with the actual final inertia
-        self.fitness_history[-1] = self.model.inertia_
 
     def predict(self, data):
         """Predict cluster labels for new data"""
@@ -128,5 +93,12 @@ class KMeansClustering:
         return self.model.cluster_centers_
     
     def get_fitness_history(self):
-        """Return fitness history for convergence analysis"""
-        return self.fitness_history
+        """
+        Return fitness history for convergence analysis
+        
+        Returns:
+        --------
+        None : scikit-learn's KMeans implementation does not expose iteration-by-iteration 
+        convergence data, so this method returns None.
+        """
+        return None
