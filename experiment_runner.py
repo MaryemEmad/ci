@@ -1,3 +1,4 @@
+experiment_runner.py:
 # experiment_runner.py: Runs experiments and collects metrics
 import numpy as np
 import time
@@ -35,7 +36,7 @@ def run_experiments(data_2d, data_3d, algorithms, n_runs=30, algorithm_runs=None
     # Initialize algorithm_runs if not provided
     if algorithm_runs is None:
         algorithm_runs = {}
-    
+
     for algo_name, algo in algorithms.items():
         # Get number of runs for this algorithm (use default if not specified)
         runs_for_algorithm = algorithm_runs.get(algo_name, n_runs)
@@ -61,23 +62,23 @@ def run_experiments(data_2d, data_3d, algorithms, n_runs=30, algorithm_runs=None
         for run in range(runs_for_algorithm):
             # Set random seed for reproducibility
             np.random.seed(algorithm_seeds[run])
-            
+
             # Measure execution time
             start_time = time.time()
             labels = algo.fit(data_2d)
             execution_time = time.time() - start_time
-            
+
             # Calculate silhouette score (clustering quality)
             score = silhouette_score(data_2d, labels)
-            
+
             # Get number of iterations (if available, for convergence speed)
             iterations = getattr(algo.model, 'n_iter_', 0) if hasattr(algo, 'model') else 0
-            
+
             # Store results
             algo_results["silhouette_scores"].append(score)
             algo_results["iterations"].append(iterations)
             algo_results["times"].append(execution_time)
-            
+
             # Show progress for algorithms with many runs
             if runs_for_algorithm > 10 and (run + 1) % 10 == 0:
                 print(f"  {algo_name} - Completed {run + 1}/{runs_for_algorithm} runs")
@@ -87,7 +88,7 @@ def run_experiments(data_2d, data_3d, algorithms, n_runs=30, algorithm_runs=None
                 algo_results["labels_2d"] = labels
                 if hasattr(algo, 'get_centroids'):
                     algo_results["centroids_2d"] = algo.get_centroids()
-        
+
         # Run experiments with 3D data (only for the last run)
         np.random.seed(algorithm_seeds[0])
         labels_3d = algo.fit(data_3d)
@@ -101,5 +102,5 @@ def run_experiments(data_2d, data_3d, algorithms, n_runs=30, algorithm_runs=None
         # Print summary
         print(f"  {algo_name} - Avg Silhouette Score: {np.mean(algo_results['silhouette_scores']):.4f}")
         print(f"  {algo_name} - Avg Time: {np.mean(algo_results['times']):.4f}s")
-    
+
     return results, seeds
