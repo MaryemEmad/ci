@@ -4,6 +4,22 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 
 def load_mall_customers_data():
+    """
+    Loads and preprocesses the Mall Customers dataset for clustering.
+    
+    Returns:
+    --------
+    df : pandas.DataFrame
+        Original dataset with all columns.
+    features_2d : numpy.ndarray
+        Normalized 2D features (Annual Income, Spending Score).
+    features_3d : numpy.ndarray
+        Normalized 3D features (Age, Annual Income, Spending Score).
+    scaler_2d : MinMaxScaler
+        Scaler for 2D features (for inverse transform if needed).
+    scaler_3d : MinMaxScaler
+        Scaler for 3D features (for inverse transform if needed).
+    """
     # Load the dataset
     # Note: Download the dataset from https://www.kaggle.com/datasets/mosesmoncy/mall-customerscsv/data
     # and place it in your project directory
