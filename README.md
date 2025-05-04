@@ -1,4 +1,4 @@
-# Customer Segmentation Dashboard
+# Clustering-Based Customer Segmentation
 
 This repository contains a comprehensive project for customer segmentation using various clustering algorithms, visualized through a user-friendly dashboard built with Tkinter. The project leverages machine learning techniques to segment customers based on the "Mall_Customers.csv" dataset and provides interactive visualizations of the results.
 
@@ -214,22 +214,3 @@ The project welcomes contributions in the following areas:
    - Optimize the code to handle larger datasets efficiently.
    - Add support for parallel processing to speed up experiments.
 
-### How to Contribute
-1. Fork the repository.
-2. Create a new branch (`git checkout -b feature-branch`).
-3. Make your changes and commit them (`git commit -m "Description of changes"`).
-4. Push to the branch (`git push origin feature-branch`).
-5. Open a pull request with a detailed description of your changes.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- Thanks to the open-source community for providing powerful libraries like Matplotlib, Seaborn, and Scikit-learn.
-- Special thanks to the contributors of the "Mall_Customers.csv" dataset.
-
-## Contact
-
-For questions or feedback, please open an issue on the GitHub repository or contact the maintainer.
