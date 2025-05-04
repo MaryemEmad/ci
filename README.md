@@ -103,8 +103,6 @@ Implemented in `ui.py` using Tkinter:
 
 ---
 
----
-
 ## 📦 Requirements
 
 Install required packages using:
