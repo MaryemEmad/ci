@@ -13,12 +13,17 @@ def ensure_results_directory():
         os.makedirs("results")
 
 # 1. Scatter Plots for 2D Clustering
-def plot_clusters_2d(data, labels, centroids, algo_name, scaler=None):
+def plot_clusters_2d(data, labels, centroids, algo_name, scaler=None, m=None, n_clusters=None, filename_prefix=""):
     ensure_results_directory()
     if data.shape[1] != 2:
         raise ValueError(f"Expected 2D data, but got data with {data.shape[1]} dimensions")
     if centroids.shape[1] != 2:
         raise ValueError(f"Expected 2D centroids, but got centroids with {centroids.shape[1]} dimensions")
+    
+    # Check for valid labels and centroids
+    if np.any(np.isnan(labels)) or np.any(np.isnan(centroids)):
+        print(f"Warning: Invalid labels or centroids for {algo_name} (m={m}, n_clusters={n_clusters}). Skipping plot.")
+        return
     
     # Inverse transform data and centroids for visualization
     if scaler:
@@ -28,23 +33,29 @@ def plot_clusters_2d(data, labels, centroids, algo_name, scaler=None):
     plt.figure(figsize=(8, 6))
     plt.scatter(data[:, 0], data[:, 1], c=labels, cmap="viridis", alpha=0.8, s=100)
     plt.scatter(centroids[:, 0], centroids[:, 1], marker='x', s=200, linewidths=3, color='red', label='Centroids')
-    plt.title(f"Clustering Results (2D) - {algo_name}", fontsize=14, fontweight='bold')
-    plt.xlabel("Annual Income (k$)", fontsize=12)
-    plt.ylabel("Spending Score (1-100)", fontsize=12)
+    plt.title(f"Clustering Results (2D) - {algo_name} (m={m}, n_clusters={n_clusters})", fontsize=16, fontweight='bold')
+    plt.xlabel("Annual Income (k$)", fontsize=14)
+    plt.ylabel("Spending Score (1-100)", fontsize=14)
     plt.colorbar(label="Cluster")
-    plt.legend()
+    plt.legend(fontsize=12)
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
-    plt.savefig(f"results/{algo_name}_clusters_2d.png", dpi=300)
+    filename = f"results/{filename_prefix}{algo_name}_clusters_2d_m_{m}_n_clusters_{n_clusters}.png"
+    plt.savefig(filename, dpi=300)
     plt.close()
 
 # 2. Scatter Plots for 3D Clustering
-def plot_clusters_3d(data, labels, centroids, algo_name, scaler=None):
+def plot_clusters_3d(data, labels, centroids, algo_name, scaler=None, m=None, n_clusters=None, filename_prefix=""):
     ensure_results_directory()
     if data.shape[1] != 3:
         raise ValueError(f"Expected 3D data, but got data with {data.shape[1]} dimensions")
     if centroids.shape[1] != 3:
         raise ValueError(f"Expected 3D centroids, but got centroids with {centroids.shape[1]} dimensions")
+    
+    # Check for valid labels and centroids
+    if np.any(np.isnan(labels)) or np.any(np.isnan(centroids)):
+        print(f"Warning: Invalid labels or centroids for {algo_name} (m={m}, n_clusters={n_clusters}). Skipping plot.")
+        return
     
     # Inverse transform data and centroids for visualization
     if scaler:
@@ -58,51 +69,60 @@ def plot_clusters_3d(data, labels, centroids, algo_name, scaler=None):
     # Plot centroids
     ax.scatter(centroids[:, 0], centroids[:, 1], centroids[:, 2], marker='x', s=200, linewidths=3, color='red', label='Centroids')
     
-    ax.legend()
+    ax.legend(fontsize=12)
     plt.colorbar(scatter, label="Cluster")
     
-    ax.set_xlabel("Age", fontsize=12)
-    ax.set_ylabel("Annual Income (k$)", fontsize=12)
-    ax.set_zlabel("Spending Score (1-100)", fontsize=12)
-    ax.set_title(f"Clustering Results (3D) - {algo_name}", fontsize=14, fontweight='bold')
+    ax.set_xlabel("Age", fontsize=14)
+    ax.set_ylabel("Annual Income (k$)", fontsize=14)
+    ax.set_zlabel("Spending Score (1-100)", fontsize=14)
+    ax.set_title(f"Clustering Results (3D) - {algo_name} (m={m}, n_clusters={n_clusters})", fontsize=16, fontweight='bold')
     plt.tight_layout()
-    plt.savefig(f"results/{algo_name}_clusters_3d.png", dpi=300)
+    filename = f"results/{filename_prefix}{algo_name}_clusters_3d_m_{m}_n_clusters_{n_clusters}.png"
+    plt.savefig(filename, dpi=300)
     plt.close()
 
 # 3. Bar Plots for Metrics Comparison
-def plot_metrics_bar_comparison(summary_df, metrics, title="Metrics Comparison (2D)", filename="metrics_bar_comparison_2d.png"):
+def plot_metrics_bar_comparison(summary_df, metrics, m, n_clusters, title="Metrics Comparison (2D)", filename_prefix=""):
     ensure_results_directory()
     for metric in metrics:
-        plt.figure(figsize=(10, 6))
-        sns.barplot(x=summary_df.index, y=summary_df[metric], hue=summary_df.index, palette='viridis', legend=False)
-        plt.title(f"{metric} Comparison (2D)", fontsize=14, fontweight='bold')
+        plt.figure(figsize=(12, 6))
+        ax = sns.barplot(x=summary_df.index, y=summary_df[metric], hue=summary_df.index, palette='viridis', legend=False)
+        for container in ax.containers:
+            ax.bar_label(container, fmt='%.4f', fontsize=10, padding=3)  # Add values on bars
+        plt.title(f"{metric} Comparison (2D, m={m}, n_clusters={n_clusters})", fontsize=16, fontweight='bold')
         plt.xticks(rotation=45, ha='right', fontsize=12)
-        plt.ylabel(metric, fontsize=12)
-        plt.xlabel("Algorithm", fontsize=12)
+        plt.ylabel(metric, fontsize=14)
+        plt.xlabel("Algorithm", fontsize=14)
         plt.grid(axis='y', linestyle='--', alpha=0.7)
         plt.tight_layout()
-        plt.savefig(f"results/{metric}_bar_comparison_2d.png", dpi=300)
+        filename = f"results/{filename_prefix}{metric}_bar_comparison_2d_m_{m}_n_clusters_{n_clusters}.png"
+        plt.savefig(filename, dpi=300)
         plt.close()
 
 # 4. Heatmap for All Metrics
-def plot_metrics_heatmap(summary_df, metrics, title="Metrics Heatmap (2D)", filename="metrics_heatmap_2d.png"):
+def plot_metrics_heatmap(summary_df, metrics, m, n_clusters, title="Metrics Heatmap (2D)", filename_prefix=""):
     ensure_results_directory()
-    plt.figure(figsize=(10, 8))
-    sns.heatmap(summary_df[metrics], annot=True, cmap='viridis', fmt='.4f', annot_kws={"size": 10})
-    plt.title(title, fontsize=14, fontweight='bold')
+    plt.figure(figsize=(12, 8))
+    sns.heatmap(summary_df[metrics], annot=True, cmap='viridis', fmt='.4f', annot_kws={"size": 12})
+    plt.title(f"{title} (m={m}, n_clusters={n_clusters})", fontsize=16, fontweight='bold')
     plt.xticks(rotation=45, ha='right', fontsize=12)
     plt.yticks(fontsize=12)
     plt.tight_layout()
-    plt.savefig(f"results/{filename}", dpi=300)
+    filename = f"results/{filename_prefix}metrics_heatmap_2d_m_{m}_n_clusters_{n_clusters}.png"
+    plt.savefig(filename, dpi=300)
     plt.close()
 
 # 5. Compare K-Means vs FCM
 def compare_kmeans_fcm(data, kmeans_labels, fcm_labels, kmeans_centroids, fcm_centroids, scaler=None, 
-                       title_left="K-Means", title_right="Fuzzy C-Means", 
-                       filename="comparison_kmeans_fcm_2d.png"):
+                       m=None, n_clusters=None, title_left="K-Means", title_right="Fuzzy C-Means", filename_prefix=""):
     ensure_results_directory()
     if data.shape[1] != 2:
         raise ValueError(f"Expected 2D data, but got data with {data.shape[1]} dimensions")
+    
+    # Check for valid labels and centroids
+    if np.any(np.isnan(kmeans_labels)) or np.any(np.isnan(fcm_labels)) or np.any(np.isnan(kmeans_centroids)) or np.any(np.isnan(fcm_centroids)):
+        print(f"Warning: Invalid labels or centroids for K-Means or FCM (m={m}, n_clusters={n_clusters}). Skipping plot.")
+        return
     
     # Inverse transform the data and centroids for visualization
     if scaler:
@@ -134,9 +154,10 @@ def compare_kmeans_fcm(data, kmeans_labels, fcm_labels, kmeans_centroids, fcm_ce
     plt.colorbar(scatter1, ax=ax1, label="Cluster")
     plt.colorbar(scatter2, ax=ax2, label="Cluster")
     
-    plt.suptitle(f"Comparison of {title_left} and {title_right} Clustering", fontsize=16, fontweight='bold')
+    plt.suptitle(f"Comparison of {title_left} and {title_right} (m={m}, n_clusters={n_clusters})", fontsize=16, fontweight='bold')
     plt.tight_layout(rect=[0, 0, 1, 0.95])
-    plt.savefig(f"results/{filename}", dpi=300)
+    filename = f"results/{filename_prefix}comparison_kmeans_fcm_2d_m_{m}_n_clusters_{n_clusters}.png"
+    plt.savefig(filename, dpi=300)
     plt.close()
 
     # Calculate silhouette scores
@@ -155,11 +176,16 @@ def compare_kmeans_fcm(data, kmeans_labels, fcm_labels, kmeans_centroids, fcm_ce
 
 # 6. Compare FCM vs GK-FCM
 def compare_fcm_gkfcm(data_2d, fcm_labels, gkfcm_labels, fcm_centroids, gkfcm_centroids, 
-                      title_left="Fuzzy C-Means", title_right="Gustafson-Kessel FCM", 
-                      filename="comparison_fcm_gkfcm_2d.png", scaler=None):
+                      scaler=None, m=None, n_clusters=None, 
+                      title_left="Fuzzy C-Means", title_right="Gustafson-Kessel FCM", filename_prefix=""):
     ensure_results_directory()
     if data_2d.shape[1] != 2:
         raise ValueError(f"Expected 2D data, but got data with {data_2d.shape[1]} dimensions")
+    
+    # Check for valid labels and centroids
+    if np.any(np.isnan(fcm_labels)) or np.any(np.isnan(gkfcm_labels)) or np.any(np.isnan(fcm_centroids)) or np.any(np.isnan(gkfcm_centroids)):
+        print(f"Warning: Invalid labels or centroids for FCM or GK-FCM (m={m}, n_clusters={n_clusters}). Skipping plot.")
+        return
     
     # Inverse transform the data and centroids
     if scaler:
@@ -167,15 +193,15 @@ def compare_fcm_gkfcm(data_2d, fcm_labels, gkfcm_labels, fcm_centroids, gkfcm_ce
         fcm_centroids = scaler.inverse_transform(fcm_centroids)
         gkfcm_centroids = scaler.inverse_transform(gkfcm_centroids)
     
-    n_clusters = len(fcm_centroids)
+    n_clusters_val = len(fcm_centroids)
     
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
     
     # Create a colormap
-    colors = plt.cm.viridis(np.linspace(0, 1, n_clusters))
+    colors = plt.cm.viridis(np.linspace(0, 1, n_clusters_val))
     
     # Plot FCM results (left)
-    for i in range(n_clusters):
+    for i in range(n_clusters_val):
         cluster_points = data_2d[fcm_labels == i]
         ax1.scatter(cluster_points[:, 0], cluster_points[:, 1], 
                    color=colors[i], alpha=0.7, s=80, label=f'Cluster {i+1}')
@@ -189,7 +215,7 @@ def compare_fcm_gkfcm(data_2d, fcm_labels, gkfcm_labels, fcm_centroids, gkfcm_ce
     ax1.grid(True, alpha=0.3)
     
     # Plot GK-FCM results (right)
-    for i in range(n_clusters):
+    for i in range(n_clusters_val):
         cluster_points = data_2d[gkfcm_labels == i]
         ax2.scatter(cluster_points[:, 0], cluster_points[:, 1], 
                    color=colors[i], alpha=0.7, s=80, label=f'Cluster {i+1}')
@@ -205,11 +231,12 @@ def compare_fcm_gkfcm(data_2d, fcm_labels, gkfcm_labels, fcm_centroids, gkfcm_ce
     # Add legend
     handles, labels = ax2.get_legend_handles_labels()
     fig.legend(handles, labels, loc='upper center', 
-              bbox_to_anchor=(0.5, 0), fancybox=True, shadow=True, ncol=n_clusters+1)
+              bbox_to_anchor=(0.5, 0), fancybox=True, shadow=True, ncol=n_clusters_val+1)
     
-    fig.suptitle(f"Comparison: {title_left} vs {title_right}", fontsize=16, fontweight='bold')
+    fig.suptitle(f"Comparison: {title_left} vs {title_right} (m={m}, n_clusters={n_clusters})", fontsize=16, fontweight='bold')
     plt.tight_layout(rect=[0, 0.05, 1, 0.95])
-    plt.savefig(f"results/{filename}", dpi=300)
+    filename = f"results/{filename_prefix}comparison_fcm_gkfcm_2d_m_{m}_n_clusters_{n_clusters}.png"
+    plt.savefig(filename, dpi=300)
     plt.close()
 
     # Calculate silhouette scores
@@ -226,9 +253,8 @@ def compare_fcm_gkfcm(data_2d, fcm_labels, gkfcm_labels, fcm_centroids, gkfcm_ce
         "gkfcm_silhouette": gkfcm_silhouette
     }
 
-# 7. Effect of Fuzziness Parameter (m) on FCM
-def plot_fcm_m_comparison(data, m_values, labels_list, centroids_list, silhouette_scores, wcss_values, scaler=None, 
-                          filename="fcm_m_comparison.png", title="FCM: Effect of Fuzziness Parameter (m)"):
+# 7. Effect of m on Performance for a Single Algorithm
+def plot_m_comparison(data, algo_name, m_values, labels_dict, centroids_dict, metrics_dict, scaler=None, n_clusters=None, filename_prefix=""):
     ensure_results_directory()
     if data.shape[1] != 2:
         raise ValueError(f"Expected 2D data, but got data with {data.shape[1]} dimensions")
@@ -238,7 +264,7 @@ def plot_fcm_m_comparison(data, m_values, labels_list, centroids_list, silhouett
     if scaler:
         display_data = scaler.inverse_transform(data)
     
-    # Create figure with subplots in a grid
+    # Create figure with subplots for clustering results
     n_plots = len(m_values)
     n_cols = min(3, n_plots)
     n_rows = (n_plots + n_cols - 1) // n_cols
@@ -249,7 +275,16 @@ def plot_fcm_m_comparison(data, m_values, labels_list, centroids_list, silhouett
     axes = axes.flatten()
     
     # Plot each m value's clustering result
-    for i, (m, labels, centroids) in enumerate(zip(m_values, labels_list, centroids_list)):
+    for i, m in enumerate(m_values):
+        labels = labels_dict.get(m)
+        centroids = centroids_dict.get(m)
+        
+        # Check for valid labels and centroids
+        if labels is None or centroids is None or np.any(np.isnan(labels)) or np.any(np.isnan(centroids)):
+            print(f"Warning: Invalid labels or centroids for {algo_name} with m={m}, n_clusters={n_clusters}. Skipping subplot.")
+            axes[i].axis('off')
+            continue
+        
         # Transform centroids for visualization if needed
         display_centroids = centroids.copy()
         if scaler:
@@ -259,7 +294,7 @@ def plot_fcm_m_comparison(data, m_values, labels_list, centroids_list, silhouett
                                  c=labels, cmap="viridis", alpha=0.8, s=80)
         axes[i].scatter(display_centroids[:, 0], display_centroids[:, 1], 
                        marker='x', s=200, linewidths=3, color='red', label='Centroids')
-        axes[i].set_title(f"FCM with m={m}", fontsize=12)
+        axes[i].set_title(f"{algo_name} with m={m}", fontsize=12)
         axes[i].set_xlabel("Annual Income (k$)", fontsize=10)
         axes[i].set_ylabel("Spending Score (1-100)", fontsize=10)
         axes[i].legend()
@@ -269,83 +304,68 @@ def plot_fcm_m_comparison(data, m_values, labels_list, centroids_list, silhouett
     for j in range(i + 1, len(axes)):
         axes[j].axis('off')
     
-    plt.suptitle("FCM Clustering with Different m Values", fontsize=16, fontweight='bold')
+    plt.suptitle(f"{algo_name} Clustering with Different m Values (n_clusters={n_clusters})", fontsize=16, fontweight='bold')
     plt.tight_layout(rect=[0, 0.05, 1, 0.95])
-    plt.savefig(f"results/fcm_m_clustering_results.png", dpi=300)
+    filename = f"results/{filename_prefix}{algo_name}_m_comparison_clusters_n_clusters_{n_clusters}.png"
+    plt.savefig(filename, dpi=300)
     plt.close()
     
     # Plot metrics comparison
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
     
-    # WCSS plot
-    ax1.plot(m_values, wcss_values, 'bo-', label='WCSS')
-    ax1.set_title("WCSS vs m Value (Lower is Better)", fontsize=12)
+    # Silhouette Score plot
+    silhouette_scores = [metrics_dict[m]['Avg_Silhouette_2D'] for m in m_values]
+    ax1.plot(m_values, silhouette_scores, 'ro-', label='Silhouette Score')
+    ax1.set_title("Silhouette Score vs m Value (Higher is Better)", fontsize=12)
     ax1.set_xlabel("Fuzziness Parameter (m)", fontsize=10)
-    ax1.set_ylabel("WCSS", fontsize=10)
+    ax1.set_ylabel("Silhouette Score", fontsize=10)
     ax1.grid(True, alpha=0.3)
     ax1.legend()
     
-    # Silhouette score plot
-    ax2.plot(m_values, silhouette_scores, 'ro-', label='Silhouette Score')
-    ax2.set_title("Silhouette Score vs m Value (Higher is Better)", fontsize=12)
+    # WCSS plot
+    wcss_values = [metrics_dict[m]['Avg_WCSS_2D'] for m in m_values]
+    ax2.plot(m_values, wcss_values, 'bo-', label='WCSS')
+    ax2.set_title("WCSS vs m Value (Lower is Better)", fontsize=12)
     ax2.set_xlabel("Fuzziness Parameter (m)", fontsize=10)
-    ax2.set_ylabel("Silhouette Score", fontsize=10)
+    ax2.set_ylabel("WCSS", fontsize=10)
     ax2.grid(True, alpha=0.3)
     ax2.legend()
     
-    plt.suptitle(title, fontsize=16, fontweight='bold')
+    plt.suptitle(f"{algo_name}: Effect of m (n_clusters={n_clusters})", fontsize=16, fontweight='bold')
     plt.tight_layout(rect=[0, 0.05, 1, 0.95])
-    plt.savefig(f"results/{filename}", dpi=300)
+    filename = f"results/{filename_prefix}{algo_name}_m_comparison_metrics_n_clusters_{n_clusters}.png"
+    plt.savefig(filename, dpi=300)
     plt.close()
-    
-    return {
-        "m_values": m_values,
-        "wcss_values": wcss_values,
-        "silhouette_scores": silhouette_scores
-    }
 
-# 8. Effect of Sigma on KFCM and MKFCM
-def plot_sigma_parameter_study(kfcm_results, mkfcm_results, sigma_values, title="KFCM vs MKFCM: Effect of Sigma Parameter", filename="kernel_sigma_comparison.png"):
+# 8. Effect of n_clusters on Performance
+def plot_n_clusters_comparison(summary_df, n_clusters_values, metric="Avg_Silhouette_2D", m=None, filename_prefix=""):
     ensure_results_directory()
-    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
+    plt.figure(figsize=(12, 6))
+    for algo in summary_df['Algorithm'].unique():
+        algo_data = summary_df[(summary_df['Algorithm'] == algo) & (summary_df['m'] == m)]
+        if not algo_data.empty:
+            plt.plot(algo_data['n_clusters'], algo_data[metric], marker='o', label=algo)
     
-    # Silhouette scores
-    ax1.plot(sigma_values, [r["silhouette"] for r in kfcm_results], label="KFCM", marker='o', color='blue')
-    ax1.plot(sigma_values, [r["silhouette"] for r in mkfcm_results], label="MKFCM", marker='s', color='orange')
-    ax1.set_xlabel("Sigma Squared", fontsize=12)
-    ax1.set_ylabel("Silhouette Score", fontsize=12)
-    ax1.set_title("Silhouette Score vs Sigma", fontsize=12)
-    ax1.legend()
-    ax1.grid(True, alpha=0.3)
-    
-    # Kernel inertia
-    ax2.plot(sigma_values, [r["inertia"] for r in kfcm_results], label="KFCM", marker='o', color='blue')
-    ax2.plot(sigma_values, [r["inertia"] for r in mkfcm_results], label="MKFCM", marker='s', color='orange')
-    ax2.set_xlabel("Sigma Squared", fontsize=12)
-    ax2.set_ylabel("Kernel Inertia", fontsize=12)
-    ax2.set_title("Kernel Inertia vs Sigma", fontsize=12)
-    ax2.legend()
-    ax2.grid(True, alpha=0.3)
-    
-    # Execution time
-    ax3.plot(sigma_values, [r["time"] for r in kfcm_results], label="KFCM", marker='o', color='blue')
-    ax3.plot(sigma_values, [r["time"] for r in mkfcm_results], label="MKFCM", marker='s', color='orange')
-    ax3.set_xlabel("Sigma Squared", fontsize=12)
-    ax3.set_ylabel("Time (seconds)", fontsize=12)
-    ax3.set_title("Execution Time vs Sigma", fontsize=12)
-    ax3.legend()
-    ax3.grid(True, alpha=0.3)
-    
-    plt.suptitle(title, fontsize=16, fontweight='bold')
-    plt.tight_layout(rect=[0, 0.05, 1, 0.95])
-    plt.savefig(f"results/{filename}", dpi=300)
+    plt.title(f"Effect of n_clusters on {metric} (m={m})", fontsize=16, fontweight='bold')
+    plt.xlabel("Number of Clusters (n_clusters)", fontsize=14)
+    plt.ylabel(metric, fontsize=14)
+    plt.legend(fontsize=12)
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    filename = f"results/{filename_prefix}n_clusters_comparison_{metric}_m_{m}.png"
+    plt.savefig(filename, dpi=300)
     plt.close()
 
 # 9. GK-FCM Covariance Matrices
-def plot_gkfcm_covariance_matrices(data, labels, centroids, covariance_matrices, scaler=None):
+def plot_gkfcm_covariance_matrices(data, labels, centroids, covariance_matrices, scaler=None, m=None, n_clusters=None, filename_prefix=""):
     ensure_results_directory()
     if data.shape[1] != 2:
         raise ValueError(f"Expected 2D data, but got data with {data.shape[1]} dimensions")
+    
+    # Check for valid inputs
+    if np.any(np.isnan(labels)) or np.any(np.isnan(centroids)) or np.any(np.isnan(covariance_matrices)):
+        print(f"Warning: Invalid labels, centroids, or covariance matrices for GK-FCM (m={m}, n_clusters={n_clusters}). Skipping plot.")
+        return
     
     # Inverse transform the data and centroids
     if scaler:
@@ -354,11 +374,11 @@ def plot_gkfcm_covariance_matrices(data, labels, centroids, covariance_matrices,
     
     plt.figure(figsize=(12, 9))
     
-    n_clusters = len(centroids)
-    colors = plt.cm.viridis(np.linspace(0, 1, n_clusters))
+    n_clusters_val = len(centroids)
+    colors = plt.cm.viridis(np.linspace(0, 1, n_clusters_val))
     
     # Plot the data points
-    for i in range(n_clusters):
+    for i in range(n_clusters_val):
         cluster_points = data[labels == i]
         plt.scatter(cluster_points[:, 0], cluster_points[:, 1], 
                    color=colors[i], alpha=0.7, s=80, label=f'Cluster {i+1}')
@@ -396,7 +416,7 @@ def plot_gkfcm_covariance_matrices(data, labels, centroids, covariance_matrices,
         return ax.add_patch(ellipse)
     
     # Plot the covariance matrices as confidence ellipses
-    for i in range(n_clusters):
+    for i in range(n_clusters_val):
         ellipse = confidence_ellipse(
             covariance_matrices[i][:2, :2],
             centroids[i][:2],
@@ -409,11 +429,11 @@ def plot_gkfcm_covariance_matrices(data, labels, centroids, covariance_matrices,
             label=f'Covariance {i+1}'
         )
         if ellipse is None:
-            print(f"Warning: Could not plot covariance ellipse for cluster {i+1}")
+            print(f"Warning: Could not plot covariance ellipse for cluster {i+1} (m={m}, n_clusters={n_clusters})")
     
     plt.xlabel("Annual Income (k$)", fontsize=12)
     plt.ylabel("Spending Score (1-100)", fontsize=12)
-    plt.title("GK-FCM Clustering with Covariance Matrices", fontsize=14, fontweight='bold')
+    plt.title(f"GK-FCM Clustering with Covariance Matrices (m={m}, n_clusters={n_clusters})", fontsize=14, fontweight='bold')
     
     handles, labels = plt.gca().get_legend_handles_labels()
     unique_labels = []
@@ -429,11 +449,12 @@ def plot_gkfcm_covariance_matrices(data, labels, centroids, covariance_matrices,
               bbox_to_anchor=(0.5, -0.05), fancybox=True, shadow=True, ncol=5)
     
     plt.tight_layout()
-    plt.savefig("results/gkfcm_covariance_matrices.png", dpi=300)
+    filename = f"results/{filename_prefix}gkfcm_covariance_matrices_m_{m}_n_clusters_{n_clusters}.png"
+    plt.savefig(filename, dpi=300)
     plt.close()
 
-# 10. Compare All Fuzzy Algorithms
-def compare_all_fuzzy(data, labels_dict, centroids_dict, scaler=None, title="Comparison of All Fuzzy Clustering Algorithms", filename="all_fuzzy_comparison.png"):
+# 10. Compare All Algorithms
+def compare_all_algorithms(data, labels_dict, centroids_dict, scaler=None, m=None, n_clusters=None, filename_prefix=""):
     ensure_results_directory()
     algorithms = list(labels_dict.keys())
     n_algos = len(algorithms)
@@ -452,9 +473,15 @@ def compare_all_fuzzy(data, labels_dict, centroids_dict, scaler=None, title="Com
         labels = labels_dict[algo]
         centroids = centroids_dict[algo]
         
+        # Check for valid labels and centroids
+        if np.any(np.isnan(labels)) or np.any(np.isnan(centroids)):
+            print(f"Warning: Invalid labels or centroids for {algo} (m={m}, n_clusters={n_clusters}). Skipping subplot.")
+            axes[idx].axis('off')
+            continue
+        
         axes[idx].scatter(data[:, 0], data[:, 1], c=labels, cmap='viridis', s=50, alpha=0.6)
         axes[idx].scatter(centroids[:, 0], centroids[:, 1], c='red', marker='x', s=200, linewidths=3, label='Centroids')
-        axes[idx].set_title(algo, fontsize=12)
+        axes[idx].set_title(f"{algo} (m={m}, n_clusters={n_clusters})", fontsize=12)
         axes[idx].set_xlabel("Annual Income (k$)", fontsize=10)
         axes[idx].set_ylabel("Spending Score (1-100)", fontsize=10)
         axes[idx].legend()
@@ -464,132 +491,112 @@ def compare_all_fuzzy(data, labels_dict, centroids_dict, scaler=None, title="Com
     for idx in range(len(algorithms), len(axes)):
         axes[idx].axis('off')
     
-    plt.suptitle(title, fontsize=16, fontweight='bold')
+    plt.suptitle(f"Comparison of All Clustering Algorithms (m={m}, n_clusters={n_clusters})", fontsize=16, fontweight='bold')
     plt.tight_layout(rect=[0, 0.05, 1, 0.95])
-    plt.savefig(f"results/{filename}", dpi=300)
+    filename = f"results/{filename_prefix}all_algorithms_comparison_m_{m}_n_clusters_{n_clusters}.png"
+    plt.savefig(filename, dpi=300)
     plt.close()
 
-# 11. Incremental Parameters Comparison for rseKFCM, spKFCM, oKFCM
-def plot_incremental_params_comparison(data, rsekfcm_results, spkfcm_results, okfcm_results, scaler=None, 
-                                       title="Incremental Parameters Comparison", filename="incremental_params_comparison.png"):
-    ensure_results_directory()
-    n_subplots = len(rsekfcm_results) + len(spkfcm_results) + len(okfcm_results)
-    ncols = 3
-    nrows = (n_subplots + ncols - 1) // ncols
-    fig, axes = plt.subplots(nrows, ncols, figsize=(ncols * 5, nrows * 5))
-    axes = axes.ravel()
+# 11. Main Function to Run All Visualizations
+def run_all_visualizations(data_2d, data_3d, scaler_2d, scaler_3d,m_values=[1.5, 2.0, 2.5], n_clusters_values=[3, 5]):
+    algorithms = ['rseKFCM', 'spKFCM', 'oKFCM', 'FCM', 'KFCM', 'MKFCM', 'GK-FCM', 'K-Means', 'ImprovedGathGeva', 'IFCM']
+    metrics = ['Avg_Silhouette_2D', 'Avg_WCSS_2D', 'Avg_Davies_Bouldin_2D', 
+               'Avg_Partition_Coefficient_2D', 'Avg_Xie_Beni_2D', 'Avg_Time']
 
-    # Inverse transform data if scaler is provided
-    if scaler:
-        data_transformed = scaler.inverse_transform(data)
-        for results in [rsekfcm_results, spkfcm_results, okfcm_results]:
-            for result in results:
-                result["centroids"] = scaler.inverse_transform(result["centroids"])
-    else:
-        data_transformed = data
+    # Load summary results
+    try:
+        summary_df = pd.read_csv('summary_results.csv')
+    except FileNotFoundError:
+        print("Error: summary_results.csv not found. Please run experiment_runner.py first.")
+        return
 
-    idx = 0
+    for m in m_values:
+        for n_clusters in n_clusters_values:
+            results_dir = f"run_results_m_{m}_n_clusters_{n_clusters}"
+            print(f"Generating visualizations for m={m}, n_clusters={n_clusters}...")
 
-    # Plot rseKFCM results
-    for result in rsekfcm_results:
-        sample_size = result.get("sample_size")
-        labels = result.get("labels")
-        centroids = result.get("centroids")
-        
-        axes[idx].scatter(data_transformed[:, 0], data_transformed[:, 1], c=labels, cmap='viridis', s=50, alpha=0.6)
-        axes[idx].scatter(centroids[:, 0], centroids[:, 1], c='red', marker='x', s=200, linewidths=3, label='Centroids')
-        axes[idx].set_title(f"rseKFCM (sample_size={sample_size})", fontsize=12)
-        axes[idx].set_xlabel("Annual Income (k$)", fontsize=10)
-        axes[idx].set_ylabel("Spending Score (1-100)", fontsize=10)
-        axes[idx].legend()
-        axes[idx].grid(True, alpha=0.3)
-        idx += 1
+            # Load labels and centroids for all algorithms
+            labels_dict_2d = {}
+            centroids_dict_2d = {}
+            labels_dict_3d = {}
+            centroids_dict_3d = {}
+            for algo in algorithms:
+                try:
+                    labels_dict_2d[algo] = np.load(f"{results_dir}/{algo}_labels_2d.npy")
+                    centroids_dict_2d[algo] = np.load(f"{results_dir}/{algo}_centroids_2d.npy")
+                    labels_dict_3d[algo] = np.load(f"{results_dir}/{algo}_labels_3d.npy")
+                    centroids_dict_3d[algo] = np.load(f"{results_dir}/{algo}_centroids_3d.npy")
+                except FileNotFoundError:
+                    print(f"Warning: Results for {algo} (m={m}, n_clusters={n_clusters}) not found. Skipping.")
+                    continue
 
-    # Plot spKFCM results
-    for result in spkfcm_results:
-        n_chunks = result.get("n_chunks")
-        labels = result.get("labels")
-        centroids = result.get("centroids")
-        
-        axes[idx].scatter(data_transformed[:, 0], data_transformed[:, 1], c=labels, cmap='viridis', s=50, alpha=0.6)
-        axes[idx].scatter(centroids[:, 0], centroids[:, 1], c='red', marker='x', s=200, linewidths=3, label='Centroids')
-        axes[idx].set_title(f"spKFCM (n_chunks={n_chunks})", fontsize=12)
-        axes[idx].set_xlabel("Annual Income (k$)", fontsize=10)
-        axes[idx].set_ylabel("Spending Score (1-100)", fontsize=10)
-        axes[idx].legend()
-        axes[idx].grid(True, alpha=0.3)
-        idx += 1
+            # Filter summary data for current m and n_clusters
+            subset_df = summary_df[(summary_df['m'] == m) & (summary_df['n_clusters'] == n_clusters)]
+            subset_df = subset_df.set_index('Algorithm')
 
-    # Plot oKFCM results
-    for result in okfcm_results:
-        n_chunks = result.get("n_chunks")
-        labels = result.get("labels")
-        centroids = result.get("centroids")
-        
-        axes[idx].scatter(data_transformed[:, 0], data_transformed[:, 1], c=labels, cmap='viridis', s=50, alpha=0.6)
-        axes[idx].scatter(centroids[:, 0], centroids[:, 1], c='red', marker='x', s=200, linewidths=3, label='Centroids')
-        axes[idx].set_title(f"oKFCM (n_chunks={n_chunks})", fontsize=12)
-        axes[idx].set_xlabel("Annual Income (k$)", fontsize=10)
-        axes[idx].set_ylabel("Spending Score (1-100)", fontsize=10)
-        axes[idx].legend()
-        axes[idx].grid(True, alpha=0.3)
-        idx += 1
+            # 1. Bar Plots for Metrics Comparison
+            plot_metrics_bar_comparison(subset_df, metrics, m, n_clusters)
 
-    # Turn off unused subplots
-    for i in range(idx, len(axes)):
-        axes[i].axis('off')
+            # 2. Heatmap for Metrics Comparison
+            plot_metrics_heatmap(subset_df, metrics, m, n_clusters)
 
-    plt.suptitle(title, fontsize=16, fontweight='bold')
-    plt.tight_layout(rect=[0, 0.05, 1, 0.95])
-    plt.savefig(f"results/{filename}", dpi=300)
-    plt.close()
+            # 3. Scatter Plots for Each Algorithm (2D and 3D)
+            for algo in algorithms:
+                if algo in labels_dict_2d and algo in centroids_dict_2d:
+                    plot_clusters_2d(data_2d, labels_dict_2d[algo], centroids_dict_2d[algo], algo, scaler_2d, m, n_clusters)
+                if algo in labels_dict_3d and algo in centroids_dict_3d:
+                    plot_clusters_3d(data_3d, labels_dict_3d[algo], centroids_dict_3d[algo], algo, scaler_3d, m, n_clusters)
 
-# 12. Main Function to Run All Visualizations
-def run_all_visualizations(data_2d, data_3d, scaler_2d, scaler_3d):
-    algorithms = ['rseKFCM', 'spKFCM', 'oKFCM', 'FCM', 'KFCM', 'MKFCM', 'GK-FCM', 'K-Means']
+            # 4. Compare K-Means vs FCM
+            if 'K-Means' in labels_dict_2d and 'FCM' in labels_dict_2d:
+                compare_kmeans_fcm(data_2d, labels_dict_2d['K-Means'], labels_dict_2d['FCM'], 
+                                   centroids_dict_2d['K-Means'], centroids_dict_2d['FCM'], scaler_2d, m, n_clusters)
 
-    # Load results from the 'run_results' folder
-    summary = {}
-    labels_dict = {}
-    centroids_dict = {}
-    for algo in algorithms:
-        df = pd.read_csv(f"run_results/{algo}_run_results.csv")
-        summary[algo] = df.mean()
-        labels_dict[algo] = np.load(f"run_results/{algo}_labels_2d.npy")
-        centroids_dict[algo] = np.load(f"run_results/{algo}_centroids_2d.npy")
+            # 5. Compare FCM vs GK-FCM
+            if 'FCM' in labels_dict_2d and 'GK-FCM' in labels_dict_2d:
+                compare_fcm_gkfcm(data_2d, labels_dict_2d['FCM'], labels_dict_2d['GK-FCM'], 
+                                  centroids_dict_2d['FCM'], centroids_dict_2d['GK-FCM'], scaler_2d, m, n_clusters)
 
-    summary_df = pd.DataFrame(summary).T
-    metrics = ['Silhouette_2D', 'WCSS_2D', 'Davies_Bouldin_2D', 'Partition_Coefficient_2D', 'Xie_Beni_2D', 'Time']
+            # 6. Compare All Algorithms
+            compare_all_algorithms(data_2d, labels_dict_2d, centroids_dict_2d, scaler_2d, m, n_clusters)
 
-    # 1. Bar Plots for Metrics Comparison
-    plot_metrics_bar_comparison(summary_df, metrics)
+            # 7. Plot GK-FCM Covariance Matrices
+            if 'GK-FCM' in labels_dict_2d:
+                try:
+                    covariance_matrices = np.load(f"{results_dir}/GK-FCM_covariances_2d.npy")
+                    plot_gkfcm_covariance_matrices(data_2d, labels_dict_2d['GK-FCM'], centroids_dict_2d['GK-FCM'], 
+                                                  covariance_matrices, scaler_2d, m, n_clusters)
+                except FileNotFoundError:
+                    print(f"Warning: Covariance matrices for GK-FCM (m={m}, n_clusters={n_clusters}) not found. Skipping.")
 
-    # 2. Heatmap for Metrics Comparison
-    plot_metrics_heatmap(summary_df, metrics)
+    # 8. Effect of m for Each Algorithm
+    for n_clusters in n_clusters_values:
+        for algo in algorithms:
+            algo_summary = summary_df[(summary_df['Algorithm'] == algo) & (summary_df['n_clusters'] == n_clusters)]
+            if algo_summary.empty:
+                print(f"Warning: No summary data for {algo} (n_clusters={n_clusters}). Skipping m comparison.")
+                continue
+            
+            labels_dict = {}
+            centroids_dict = {}
+            metrics_dict = {}
+            for m in m_values:
+                results_dir = f"run_results_m_{m}_n_clusters_{n_clusters}"
+                try:
+                    labels_dict[m] = np.load(f"{results_dir}/{algo}_labels_2d.npy")
+                    centroids_dict[m] = np.load(f"{results_dir}/{algo}_centroids_2d.npy")
+                    metrics_dict[m] = algo_summary[algo_summary['m'] == m].iloc[0].to_dict()
+                except FileNotFoundError:
+                    print(f"Warning: Results for {algo} (m={m}, n_clusters={n_clusters}) not found. Skipping m={m}.")
+                    continue
+            
+            if labels_dict and centroids_dict:
+                plot_m_comparison(data_2d, algo, m_values, labels_dict, centroids_dict, metrics_dict, scaler_2d, n_clusters)
 
-    # 3. Scatter Plots for Each Algorithm (2D)
-    for algo in algorithms:
-        plot_clusters_2d(data_2d, labels_dict[algo], centroids_dict[algo], algo, scaler_2d)
-
-    # 4. Scatter Plots for Each Algorithm (3D)
-    for algo in algorithms:
-        labels_3d = np.load(f"run_results/{algo}_labels_3d.npy")
-        centroids_3d = np.load(f"run_results/{algo}_centroids_3d.npy")
-        plot_clusters_3d(data_3d, labels_3d, centroids_3d, algo, scaler_3d)
-
-    # 5. Compare K-Means vs FCM
-    compare_kmeans_fcm(data_2d, labels_dict['K-Means'], labels_dict['FCM'], 
-                       centroids_dict['K-Means'], centroids_dict['FCM'], scaler_2d)
-
-    # 6. Compare FCM vs GK-FCM
-    compare_fcm_gkfcm(data_2d, labels_dict['FCM'], labels_dict['GK-FCM'], 
-                      centroids_dict['FCM'], centroids_dict['GK-FCM'], scaler_2d)
-
-    # 7. Compare All Fuzzy Algorithms
-    fuzzy_algorithms = ['rseKFCM', 'spKFCM', 'oKFCM', 'FCM', 'KFCM', 'MKFCM', 'GK-FCM']
-    fuzzy_labels_dict = {algo: labels_dict[algo] for algo in fuzzy_algorithms}
-    fuzzy_centroids_dict = {algo: centroids_dict[algo] for algo in fuzzy_algorithms}
-    compare_all_fuzzy(data_2d, fuzzy_labels_dict, fuzzy_centroids_dict, scaler_2d)
+    # 9. Effect of n_clusters for Each m
+    for m in m_values:
+        plot_n_clusters_comparison(summary_df, n_clusters_values, metric="Avg_Silhouette_2D", m=m)
+        plot_n_clusters_comparison(summary_df, n_clusters_values, metric="Avg_WCSS_2D", m=m)
 
 if __name__ == "__main__":
     # Load data
@@ -598,13 +605,10 @@ if __name__ == "__main__":
     data_3d = data[['Age', 'Annual Income (k$)', 'Spending Score (1-100)']].values
 
     from sklearn.preprocessing import StandardScaler
-    # Create separate scalers for 2D and 3D data
     scaler_2d = StandardScaler()
     scaler_3d = StandardScaler()
-    
-    # Fit and transform the data
     data_2d = scaler_2d.fit_transform(data_2d)
     data_3d = scaler_3d.fit_transform(data_3d)
 
     # Run all visualizations
-    run_all_visualizations(data_2d, data_3d, scaler_2d, scaler_3d)
+    run_all_visualizations(data_2d, data_3d, scaler_2d, scaler_3d,m_values=[1.5, 2.0, 2.5], n_clusters_values=[3, 5]) 

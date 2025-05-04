@@ -20,7 +20,6 @@ class ImprovedGathGeva:
 
     def _initialize_membership(self, X):
         n_samples = X.shape[0]
-       
         self.membership = np.random.dirichlet(np.ones(self.n_clusters), size=n_samples)
 
     def _calculate_covariances(self, X):
@@ -31,13 +30,12 @@ class ImprovedGathGeva:
             diff = X - self.centers[i]
             weighted_diff = (self.membership[:, i][:, np.newaxis] ** self.m) * diff
             cov = (weighted_diff.T @ diff) / np.sum(self.membership[:, i] ** self.m)
-
-            # Adding small value to ensure positive definiteness
-            cov += np.eye(n_features) * 1e-6
+            cov += np.eye(n_features) * 1e-3  # Increased regularization
             self.covariances[i] = cov
 
     def _calculate_pi(self):
         self.pi = np.mean(self.membership, axis=0)
+        self.pi = np.clip(self.pi, 1e-6, 1.0)  # Prevent small pi values
 
     def _calculate_distances(self, X):
         n_samples = X.shape[0]
@@ -47,43 +45,46 @@ class ImprovedGathGeva:
             try:
                 inv_cov = np.linalg.inv(self.covariances[i])
                 det_cov = np.linalg.det(self.covariances[i])
+                det_cov = max(det_cov, 1e-6)  # Prevent extreme det_cov
             except np.linalg.LinAlgError:
                 inv_cov = np.linalg.pinv(self.covariances[i])
                 det_cov = 1e-6
 
             diff = X - self.centers[i]
-            mahalanobis_dist = np.array([mahalanobis(x, np.zeros(len(x)), inv_cov) for x in diff])
-
-            # Capping the mahalanobis distance to prevent overflow
+            mahalanobis_dist = np.sqrt(np.einsum('ij,jk,ik->i', diff, inv_cov, diff))
             mahalanobis_dist = np.clip(mahalanobis_dist, None, 100)
-
-            # Ensure that exponential doesn't overflow
             distances[:, i] = (np.sqrt(det_cov) / self.pi[i]) * np.exp(np.clip(0.5 * mahalanobis_dist ** 2, None, 700))
 
-        return distances
+        return np.fmax(distances, np.finfo(np.float64).eps)
 
-    def fit(self, X):
+    def fit(self, X, K=None):
         n_samples, n_features = X.shape
         self._initialize_centers(X)
         self._initialize_membership(X)
 
         for iteration in range(self.max_iter):
             old_membership = self.membership.copy()
-
             self._calculate_covariances(X)
             self._calculate_pi()
-
             distances = self._calculate_distances(X)
-
             distances = np.fmax(distances, np.finfo(np.float64).eps)
-            exponent = 2 / (self.m - 1)
-            membership = np.zeros((n_samples, self.n_clusters))
 
+            exponent = 2 / (self.m - 1)
+            exponent = min(exponent, 5)  # Tighter limit on exponent
+            membership = np.zeros((n_samples, self.n_clusters))
             for i in range(self.n_clusters):
                 ratio = distances[:, i, np.newaxis] / distances
+                ratio = np.clip(ratio, 1e-5, 1e5)  # Adjusted clipping
                 membership[:, i] = 1 / np.sum(ratio ** exponent, axis=1)
 
-            self.membership = membership
+                # Fallback for invalid memberships
+                if np.any(np.isnan(membership[:, i]) | (membership[:, i] <= 0)):
+                    # Use Euclidean distances as fallback
+                    euclidean_dist = np.sum((X - self.centers[i])**2, axis=1)
+                    membership[:, i] = 1 / (euclidean_dist + 1e-10)
+
+            self.membership = np.clip(membership, 1e-10, 1.0)  # Clip memberships
+            self.membership /= np.sum(self.membership, axis=1, keepdims=True)  # Normalize
 
             for i in range(self.n_clusters):
                 weighted_sum = np.sum((self.membership[:, i] ** self.m)[:, np.newaxis] * X, axis=0)
@@ -91,10 +92,10 @@ class ImprovedGathGeva:
                 self.centers[i] = weighted_sum / sum_weights
 
             if np.linalg.norm(self.membership - old_membership) < self.epsilon:
-                print(f"Converged at iteration {iteration}")
                 break
 
-        return self
+        labels = np.argmax(self.membership, axis=1)
+        return self.membership, self.centers, labels, iteration + 1
 
     def predict(self, X):
         distances = self._calculate_distances(X)
@@ -114,6 +115,7 @@ class ImprovedGathGeva:
                 cov = covariances[i]
                 inv_cov = np.linalg.inv(cov)
                 det_cov = np.linalg.det(cov)
+                det_cov = max(det_cov, 1e-6)  # Prevent extreme det_cov
             except np.linalg.LinAlgError:
                 inv_cov = np.linalg.pinv(cov)
                 det_cov = 1e-6

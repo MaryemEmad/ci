@@ -12,6 +12,8 @@ from kfcm_clustering import KernelFuzzyCMeansClustering
 from mkfcm_clustering import ModifiedKernelFuzzyCMeansClustering
 from gkfcm_clustering import GKFuzzyCMeansClustering
 from kmeans_clustering import KMeansClustering
+from improved_gath_geva import ImprovedGathGeva
+from ifcm_clustering import IFCMClustering
 
 def calculate_partition_coefficient(memberships):
     """Calculate Partition Coefficient (PC) for fuzzy clustering."""
@@ -58,29 +60,23 @@ def compute_kernel_matrix(data, kernel='rbf', sigma=None):
 def compute_wcss(data, memberships, centroids, m=2, is_kmeans=False):
     """Compute Within-Cluster Sum of Squares (WCSS)."""
     if is_kmeans:
-        # Ensure memberships are hard assignments (0 or 1)
         labels = np.argmax(memberships, axis=1)
         hard_memberships = np.zeros_like(memberships)
         hard_memberships[np.arange(len(labels)), labels] = 1
-        
-        # Compute WCSS using vectorized operations
         wcss = 0
         for i in range(centroids.shape[0]):
             cluster_points = data[labels == i]
-            if len(cluster_points) > 0:  # Avoid empty clusters
+            if len(cluster_points) > 0:
                 wcss += np.sum((cluster_points - centroids[i]) ** 2)
         return wcss
     
-    # For fuzzy clustering
     memberships_pow = memberships ** m
     return np.sum(memberships_pow.T * np.sum((data - centroids[:, np.newaxis])**2, axis=2))
 
-def run_experiments(data_2d, data_3d, algorithms, n_runs=30, algorithm_runs=None, m=2.0, kernel='rbf', sigma=None):
+def run_experiments(data_2d, data_3d, algorithms, n_runs=30, algorithm_runs=None, m=2.0, kernel='rbf', sigma=None, results_dir="run_results"):
     results = {}
     seeds = {}
     
-    # Create a 'results' folder if it doesn't exist
-    results_dir = "run_results"
     if not os.path.exists(results_dir):
         os.makedirs(results_dir)
 
@@ -118,16 +114,14 @@ def run_experiments(data_2d, data_3d, algorithms, n_runs=30, algorithm_runs=None
             "n_runs": runs_for_algorithm,
         }
 
-        # Compute kernel matrices for 2D and 3D data if needed
-        K_2d = compute_kernel_matrix(data_2d, kernel, sigma) if algo_name not in ['FCM', 'GK-FCM', 'K-Means'] else None
-        K_3d = compute_kernel_matrix(data_3d, kernel, sigma) if algo_name not in ['FCM', 'GK-FCM', 'K-Means'] else None
+        K_2d = compute_kernel_matrix(data_2d, kernel, sigma) if algo_name not in ['FCM', 'GK-FCM', 'K-Means', 'ImprovedGathGeva', 'IFCM'] else None
+        K_3d = compute_kernel_matrix(data_3d, kernel, sigma) if algo_name not in ['FCM', 'GK-FCM', 'K-Means', 'ImprovedGathGeva', 'IFCM'] else None
 
         for run in range(runs_for_algorithm):
             np.random.seed(algorithm_seeds[run])
             algo.random_state = algorithm_seeds[run]
 
             try:
-                # 2D Data
                 start_time = time.time()
                 memberships_2d, centroids_2d, labels_2d, iterations = algo.fit(data_2d, K_2d)
                 execution_time = time.time() - start_time
@@ -138,7 +132,6 @@ def run_experiments(data_2d, data_3d, algorithms, n_runs=30, algorithm_runs=None
                 pc_2d = calculate_partition_coefficient(memberships_2d)
                 xb_2d = calculate_xie_beni_index(data_2d, memberships_2d, centroids_2d, m)
 
-                # 3D Data
                 start_time = time.time()
                 memberships_3d, centroids_3d, labels_3d, iterations = algo.fit(data_3d, K_3d)
                 execution_time = max(execution_time, time.time() - start_time)
@@ -162,7 +155,6 @@ def run_experiments(data_2d, data_3d, algorithms, n_runs=30, algorithm_runs=None
                 algo_results["iterations"].append(iterations)
                 algo_results["times"].append(execution_time)
 
-                # Store best run based on Silhouette Score
                 if score_2d > algo_results["best_silhouette_2d"]:
                     algo_results["best_silhouette_2d"] = score_2d
                     algo_results["labels_2d"] = labels_2d
@@ -226,17 +218,57 @@ scaler = StandardScaler()
 data_2d = scaler.fit_transform(data_2d)
 data_3d = scaler.fit_transform(data_3d)
 
-# Initialize algorithms
-algorithms = {
-    'rseKFCM': RseKFCMClustering(n_clusters=5, m=2.0, sample_size=50, max_iter=100, epsilon=1e-3, random_state=42),
-    'spKFCM': SpKFCMClustering(n_clusters=5, m=2.0, n_chunks=2, max_iter=100, epsilon=1e-3, random_state=42),
-    'oKFCM': OKFCMClustering(n_clusters=5, m=2.0, n_chunks=2, max_iter=100, epsilon=1e-3, random_state=42),
-    'FCM': FuzzyCMeansClustering(n_clusters=5, m=2.0, max_iter=100, tol=1e-4, random_state=42),
-    'KFCM': KernelFuzzyCMeansClustering(n_clusters=5, m=2.0, max_iter=100, tol=1e-4, random_state=42),
-    'MKFCM': ModifiedKernelFuzzyCMeansClustering(n_clusters=5, m=2.0, max_iter=100, tol=1e-4, random_state=42),
-    'GK-FCM': GKFuzzyCMeansClustering(n_clusters=5, m=2.0, max_iter=100, tol=1e-4, random_state=42, min_det_value=1e-3),
-    'K-Means': KMeansClustering(n_clusters=5, init_method='k-means++', random_state=42, max_iter=300)
-}
+# Define parameter settings to test
+m_values = [1.5, 2.0, 2.5]
+n_clusters_values = [3, 5]
 
-# Run experiments
-results, seeds = run_experiments(data_2d, data_3d, algorithms, n_runs=30, m=2.0, kernel='rbf')
+# Run experiments for each combination of m and n_clusters
+all_results = {}
+for m in m_values:
+    for n_clusters in n_clusters_values:
+        print(f"\nRunning experiments with m={m}, n_clusters={n_clusters}...")
+        
+        # Initialize algorithms with current m and n_clusters
+        algorithms = {
+            'rseKFCM': RseKFCMClustering(n_clusters=n_clusters, m=m, sample_size=50, max_iter=100, epsilon=1e-3, random_state=42),
+            'spKFCM': SpKFCMClustering(n_clusters=n_clusters, m=m, n_chunks=2, max_iter=100, epsilon=1e-3, random_state=42),
+            'oKFCM': OKFCMClustering(n_clusters=n_clusters, m=m, n_chunks=2, max_iter=100, epsilon=1e-3, random_state=42),
+            'FCM': FuzzyCMeansClustering(n_clusters=n_clusters, m=m, max_iter=100, tol=1e-4, random_state=42),
+            'KFCM': KernelFuzzyCMeansClustering(n_clusters=n_clusters, m=m, max_iter=100, tol=1e-4, random_state=42),
+            'MKFCM': ModifiedKernelFuzzyCMeansClustering(n_clusters=n_clusters, m=m, max_iter=100, tol=1e-4, random_state=42),
+            'GK-FCM': GKFuzzyCMeansClustering(n_clusters=n_clusters, m=m, max_iter=100, tol=1e-4, random_state=42, min_det_value=1e-3),
+            'K-Means': KMeansClustering(n_clusters=n_clusters, init_method='k-means++', random_state=42, max_iter=300),
+            'ImprovedGathGeva': ImprovedGathGeva(n_clusters=n_clusters,  m=m, max_iter=100, epsilon=1e-6, random_state=42),
+            'IFCM': IFCMClustering(n_clusters=n_clusters, m=m, max_iter=100, tol=1e-4, random_state=42)
+        }
+
+        # Create a unique results directory for this combination
+        results_dir = f"run_results_m_{m}_n_clusters_{n_clusters}"
+        
+        # Run experiments
+        results, seeds = run_experiments(data_2d, data_3d, algorithms, n_runs=30, m=m, results_dir=results_dir)
+        
+        # Store results for comparison
+        all_results[f"m_{m}_n_clusters_{n_clusters}"] = results
+
+# Save a summary of results
+summary_data = []
+for setting, results in all_results.items():
+    m, n_clusters = setting.split('_')[1], setting.split('_')[-1]
+    for algo_name, algo_results in results.items():
+        summary_data.append({
+            'm': float(m),
+            'n_clusters': int(n_clusters),
+            'Algorithm': algo_name,
+            'Avg_Silhouette_2D': np.mean(algo_results['silhouette_scores_2d']),
+            'Avg_Silhouette_3D': np.mean(algo_results['silhouette_scores_3d']),
+            'Avg_WCSS_2D': np.mean(algo_results['wcss_2d']),
+            'Avg_Davies_Bouldin_2D': np.mean(algo_results['davies_bouldin_2d']),
+            'Avg_Partition_Coefficient_2D': np.mean(algo_results['partition_coeff_2d']),
+            'Avg_Xie_Beni_2D': np.mean(algo_results['xie_beni_2d']),
+            'Avg_Time': np.mean(algo_results['times'])
+        })
+
+summary_df = pd.DataFrame(summary_data)
+summary_df.to_csv('summary_results.csv', index=False)
+print("\nSummary results saved to 'summary_results.csv'")

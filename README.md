@@ -1,250 +1,235 @@
-# Clustering Algorithms Comparison
+# Customer Segmentation Dashboard
 
-This project implements and compares several clustering algorithms:
-1. **K-means** - The classic hard clustering algorithm
-2. **Fuzzy C-Means (FCM)** - The classic fuzzy clustering algorithm
-3. **Gustafson-Kessel FCM (GK-FCM)** - An extension of FCM that can detect clusters of different shapes
-4. **Kernel Fuzzy C-Means (KFCM)** - Uses kernel tricks to handle non-linearly separable clusters
-5. **Modified Kernel Fuzzy C-Means (MKFCM)** - An enhanced version of KFCM
+This repository contains a comprehensive project for customer segmentation using various clustering algorithms, visualized through a user-friendly dashboard built with Tkinter. The project leverages machine learning techniques to segment customers based on the "Mall_Customers.csv" dataset and provides interactive visualizations of the results.
+
+## Project Overview
+
+The goal of this project is to analyze customer data and segment it into distinct groups using different clustering algorithms. The dashboard allows users to:
+- Explore clustering results in 2D and 3D visualizations.
+- Compare performance metrics such as Silhouette Score, WCSS, Davies-Bouldin Index, and execution time.
+- View heatmaps and comparisons between algorithms (e.g., K-Means vs. FCM).
+
+The project is implemented using Python and relies on libraries such as NumPy, Pandas, Scikit-learn, Matplotlib, Seaborn, and Tkinter.
 
 ## Features
 
-- Implementation of K-means, FCM, GK-FCM, KFCM, and MKFCM algorithms
-- Comprehensive parameter study capabilities (fuzzy coefficient m, kernel parameter σ²)
-- Statistical analysis with multiple runs and error quantification
-- Performance metrics calculation (Silhouette Score, Inertia, Execution Time)
-- Visualization tools for clustering results and performance comparison
+- **Clustering Algorithms**: Includes rseKFCM, spKFCM, oKFCM, FCM, KFCM, MKFCM, GK-FCM, K-Means, ImprovedGathGeva, and IFCM.
+- **Visualizations**: 2D and 3D scatter plots, heatmaps, and algorithm comparisons.
+- **Interactive Dashboard**: Built with Tkinter, allowing users to select algorithms and view results dynamically.
+- **Performance Metrics**: Displays Silhouette Score, WCSS, Davies-Bouldin Index, and execution time in a table.
 
+## Requirements
 
-## Key Experiments
+To run this project, ensure you have the following dependencies installed:
+- Python 3.x
+- NumPy
+- Pandas
+- Scikit-learn
+- Matplotlib
+- Seaborn
+- Pillow
+- Tkinter (usually included with Python)
 
-The project includes several parameter studies and algorithm comparisons:
-
-1. **K-means vs FCM**: Compares basic hard and fuzzy clustering approaches
-2. **K-means Initialization**: Compares random vs. k-means++ initialization
-3. **FCM m-value**: Studies the effect of the fuzziness coefficient on clustering
-4. **FCM vs GK-FCM**: Compares standard FCM against Gustafson-Kessel variant 
-5. **Fuzzy Algorithm Comparison**: Compares all fuzzy clustering approaches
-6. **Kernel σ² Parameter Study**: Analyzes the impact of kernel width parameter on KFCM and MKFCM
-
-## Installation
-
+Install the required packages using:
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/clustering-comparison.git
-cd clustering-comparison
-
-# Install dependencies
-pip install -r requirements.txt
+pip install numpy pandas scikit-learn matplotlib seaborn pillow
 ```
 
-## Running the Project
+## Project Structure
 
-The main script `run.py` performs all experiments and generates visualizations:
+- **`Mall_Customers.csv`**: The dataset containing customer information (Age, Annual Income, Spending Score).
+- **`run_results_m_<m>_n_clusters_<n>/`**: Directories storing precomputed clustering results (labels, centroids, memberships) for each combination of `m` and `n_clusters`.
+- **`results/`**: Directory containing generated visualization images (e.g., 2D/3D plots, heatmaps).
+- **`summary_results.csv`**: File with performance metrics for each algorithm across all experiments.
+- **`ui.py`**: Main script for the Tkinter dashboard that loads and displays precomputed visualizations.
+- **`visualization.py`**: Script to generate clustering visualizations (used to create images in `results`).
+- **`experiment_runner.py`**: Script to run clustering experiments, evaluate performance, and generate results.
 
+## Clustering Algorithms
+
+The project implements and evaluates the following 10 clustering algorithms:
+
+1. **rseKFCM (Random Sampling Enhanced Kernel Fuzzy C-Means)**:
+   - A kernel-based fuzzy clustering algorithm that uses random sampling to improve scalability.
+2. **spKFCM (Spatial Kernel Fuzzy C-Means)**:
+   - A kernel-based fuzzy clustering algorithm that incorporates spatial information.
+3. **oKFCM (Online Kernel Fuzzy C-Means)**:
+   - A kernel-based fuzzy clustering algorithm designed for online data processing.
+4. **FCM (Fuzzy C-Means)**:
+   - A traditional fuzzy clustering algorithm that assigns membership probabilities to data points.
+5. **KFCM (Kernel Fuzzy C-Means)**:
+   - An extension of FCM that uses kernel functions to handle non-linear data distributions.
+6. **MKFCM (Modified Kernel Fuzzy C-Means)**:
+   - A modified version of KFCM with improved convergence and performance.
+7. **GK-FCM (Gustafson-Kessel Fuzzy C-Means)**:
+   - A fuzzy clustering algorithm that uses adaptive distance norms to capture cluster shapes.
+8. **K-Means**:
+   - A classic hard clustering algorithm that partitions data into `k` clusters.
+9. **ImprovedGathGeva**:
+   - An improved version of the Gath-Geva algorithm, enhancing fuzzy clustering with better initialization.
+10. **IFCM (Improved Fuzzy C-Means)**:
+    - An enhanced version of FCM with optimizations for better clustering accuracy.
+
+Each algorithm is implemented in its respective Python file (e.g., `rsekfcm_clustering.py`, `fcm_clustering.py`), and their performance is evaluated using multiple metrics.
+
+## Experiments
+
+The experiments are conducted using the `experiment_runner.py` script, which performs the following:
+
+### Setup
+- **Dataset**: The "Mall_Customers.csv" dataset is used, with 2D (Annual Income, Spending Score) and 3D (Age, Annual Income, Spending Score) features extracted.
+- **Preprocessing**: Data is standardized using `StandardScaler` from Scikit-learn.
+- **Parameters**:
+  - Fuzziness parameter (`m`): Tested with values `[1.5, 2.0, 2.5]`.
+  - Number of clusters (`n_clusters`): Tested with values `[3, 5]`.
+  - Number of runs: 30 runs per algorithm to ensure robust evaluation.
+
+### Evaluation Metrics
+For each algorithm, the following metrics are computed:
+- **Silhouette Score**: Measures how similar an object is to its own cluster compared to other clusters (higher is better).
+- **Within-Cluster Sum of Squares (WCSS)**: Measures the compactness of clusters (lower is better).
+- **Davies-Bouldin Index**: Measures the average similarity ratio of each cluster with its most similar cluster (lower is better).
+- **Partition Coefficient**: Measures the fuzziness of the clustering (higher is better, used for fuzzy algorithms).
+- **Xie-Beni Index**: Measures the ratio of intra-cluster distance to inter-cluster separation (lower is better, used for fuzzy algorithms).
+- **Execution Time**: Measures the time taken for each run.
+
+### Process
+- For each combination of `m` and `n_clusters`, the script:
+  1. Initializes the 10 algorithms with the specified parameters.
+  2. Runs each algorithm 30 times with different random seeds to account for variability.
+  3. Computes the evaluation metrics for both 2D and 3D data.
+  4. Saves the best run (based on Silhouette Score) for each algorithm, including labels, centroids, and memberships, in a directory named `run_results_m_<m>_n_clusters_<n>`.
+  5. Saves detailed run results for each algorithm in a CSV file (e.g., `rseKFCM_run_results.csv`).
+- A summary of average metrics across all runs is saved in `summary_results.csv`.
+
+### Results
+- The results are used to generate visualizations in `visualization.py`, which are then displayed in the dashboard via `ui.py`.
+- Example metrics for `m=2.0`, `n_clusters=5` (as shown in the dashboard screenshot):
+  - rseKFCM: Avg Silhouette (2D) = 0.5447, Avg WCSS (2D) = 52.1462, Avg Time = 0.4108s
+  - K-Means: Avg Silhouette (2D) = 0.5539, Avg WCSS (2D) = 65.5664, Avg Time = 0.0416s
+  - ImprovedGathGeva: Avg Silhouette (2D) = 0.5530, Avg WCSS (2D) = 134.8649, Avg Time = 0.3896s
+
+## Setup and Usage
+
+### 1. Clone the Repository
+Clone this repository to your local machine:
 ```bash
-# Run all experiments and generate visualizations
-python run.py
+git clone <repository-url>
+cd customer-segmentation-dashboard
 ```
 
-## Basic Algorithm Usage
+### 2. Prepare the Data and Results
+- Ensure `Mall_Customers.csv` is in the project directory.
+- If the `run_results_m_<m>_n_clusters_<n>/` directories and `summary_results.csv` are not present, run `experiment_runner.py` to generate them:
+  ```python
+  import pandas as pd
+  from sklearn.preprocessing import StandardScaler
+  from experiment_runner import run_experiments
 
-```python
-# K-means
-from kmeans_clustering import KMeansClustering
-kmeans = KMeansClustering(n_clusters=3, init_method='k-means++')
-kmeans_labels = kmeans.fit(X)
+  data = pd.read_csv('Mall_Customers.csv')
+  data_2d = data[['Annual Income (k$)', 'Spending Score (1-100)']].values
+  data_3d = data[['Age', 'Annual Income (k$)', 'Spending Score (1-100)']].values
 
-# Fuzzy C-Means
-from fcm_clustering import FuzzyCMeansClustering
-fcm = FuzzyCMeansClustering(n_clusters=3, m=2.0)
-fcm_labels = fcm.fit(X)
+  scaler = StandardScaler()
+  data_2d = scaler.fit_transform(data_2d)
+  data_3d = scaler.fit_transform(data_3d)
 
-# Gustafson-Kessel FCM
-from gkfcm_clustering import GKFuzzyCMeansClustering
-gkfcm = GKFuzzyCMeansClustering(n_clusters=3, m=2.0)
-gkfcm_labels = gkfcm.fit(X)
+  m_values = [1.5, 2.0, 2.5]
+  n_clusters_values = [3, 5]
 
-# Kernel FCM
-from kfcm_clustering import KernelFuzzyCMeansClustering
-kfcm = KernelFuzzyCMeansClustering(n_clusters=3, m=2.0, sigma_squared=10.0)
-kfcm_labels = kfcm.fit(X)
+  for m in m_values:
+      for n_clusters in n_clusters_values:
+          # Define algorithms
+          from rsekfcm_clustering import RseKFCMClustering
+          from spkfcm_clustering import SpKFCMClustering
+          from okfcm_clustering import OKFCMClustering
+          from fcm_clustering import FuzzyCMeansClustering
+          from kfcm_clustering import KernelFuzzyCMeansClustering
+          from mkfcm_clustering import ModifiedKernelFuzzyCMeansClustering
+          from gkfcm_clustering import GKFuzzyCMeansClustering
+          from kmeans_clustering import KMeansClustering
+          from improved_gath_geva import ImprovedGathGeva
+          from ifcm_clustering import IFCMClustering
 
-# Modified Kernel FCM
-from mkfcm_clustering import ModifiedKernelFuzzyCMeansClustering
-mkfcm = ModifiedKernelFuzzyCMeansClustering(n_clusters=3, m=2.0, sigma_squared=10.0)
-mkfcm_labels = mkfcm.fit(X)
+          algorithms = {
+              'rseKFCM': RseKFCMClustering(n_clusters=n_clusters, m=m),
+              'spKFCM': SpKFCMClustering(n_clusters=n_clusters, m=m),
+              'oKFCM': OKFCMClustering(n_clusters=n_clusters, m=m),
+              'FCM': FuzzyCMeansClustering(n_clusters=n_clusters, m=m),
+              'KFCM': KernelFuzzyCMeansClustering(n_clusters=n_clusters, m=m),
+              'MKFCM': ModifiedKernelFuzzyCMeansClustering(n_clusters=n_clusters, m=m),
+              'GK-FCM': GKFuzzyCMeansClustering(n_clusters=n_clusters, m=m),
+              'K-Means': KMeansClustering(n_clusters=n_clusters),
+              'ImprovedGathGeva': ImprovedGathGeva(n_clusters=n_clusters, m=m),
+              'IFCM': IFCMClustering(n_clusters=n_clusters, m=m)
+          }
+
+          results_dir = f"run_results_m_{m}_n_clusters_{n_clusters}"
+          run_experiments(data_2d, data_3d, algorithms, n_runs=30, m=m, results_dir=results_dir)
+  ```
+- Run `visualization.py` to generate images in the `results/` directory if not already present:
+  ```python
+  from visualization import run_all_visualizations
+  import pandas as pd
+  from sklearn.preprocessing import StandardScaler
+
+  data = pd.read_csv('Mall_Customers.csv')
+  data_2d = data[['Annual Income (k$)', 'Spending Score (1-100)']].values
+  data_3d = data[['Age', 'Annual Income (k$)', 'Spending Score (1-100)']].values
+
+  scaler_2d = StandardScaler()
+  scaler_3d = StandardScaler()
+  data_2d = scaler_2d.fit_transform(data_2d)
+  data_3d = scaler_3d.fit_transform(data_3d)
+
+  run_all_visualizations(data_2d, data_3d, scaler_2d, scaler_3d, m_values=[2.0], n_clusters_values=[5])
+  ```
+
+### 3. Run the Dashboard
+Execute the dashboard script:
+```bash
+python ui.py
 ```
+- The dashboard will open, displaying a table of performance metrics and buttons to view 2D/3D plots, heatmaps, and comparisons.
+- Click on an algorithm button (e.g., "Show spKFCM") to load its precomputed visualizations from the `results/` directory.
 
-## Performance Metrics
+## Contributions
 
-The project uses the following metrics for comparison:
+The project welcomes contributions in the following areas:
 
-- **Silhouette Score**: Measures how similar an object is to its own cluster compared to other clusters (higher is better)
-- **Inertia**: Sum of squared distances to cluster centers (lower is better)
-- **Execution Time**: Processing time efficiency (lower is better)
+### Potential Enhancements
+1. **Algorithm Improvements**:
+   - Optimize the existing clustering algorithms for better performance (e.g., reduce execution time).
+   - Add new clustering algorithms to compare with the current ones.
+2. **Visualization Enhancements**:
+   - Add interactive visualizations using libraries like Plotly for better user experience.
+   - Include more comparison plots (e.g., effect of `m` on all algorithms in a single plot).
+3. **UI Improvements**:
+   - Enhance the Tkinter dashboard with more features (e.g., filters for `m` and `n_clusters`).
+   - Migrate the dashboard to a web-based interface using frameworks like Flask or Dash.
+4. **Evaluation Metrics**:
+   - Add more clustering evaluation metrics (e.g., Calinski-Harabasz Index).
+   - Implement cross-validation techniques to validate clustering results.
+5. **Scalability**:
+   - Optimize the code to handle larger datasets efficiently.
+   - Add support for parallel processing to speed up experiments.
 
-## Statistical Analysis
+### How to Contribute
+1. Fork the repository.
+2. Create a new branch (`git checkout -b feature-branch`).
+3. Make your changes and commit them (`git commit -m "Description of changes"`).
+4. Push to the branch (`git push origin feature-branch`).
+5. Open a pull request with a detailed description of your changes.
 
-All experiments are run multiple times with different random seeds to ensure statistical significance. Results include:
-- Mean and standard deviation for all metrics
-- Visualizations with error bars
-- Parameter study trend analysis
+## License
 
-## Important Notes
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-- **Convergence Curves**: Scikit-learn's KMeans implementation doesn't expose the actual iteration-by-iteration convergence data, so convergence curve plots only include fuzzy algorithms with real convergence history.
+## Acknowledgments
 
-## When to Use Which Algorithm
+- Thanks to the open-source community for providing powerful libraries like Matplotlib, Seaborn, and Scikit-learn.
+- Special thanks to the contributors of the "Mall_Customers.csv" dataset.
 
-- **K-means**: Fast, efficient for spherical clusters of similar size
-- **Fuzzy C-Means (FCM)**: When objects might belong to multiple clusters with different degrees
-- **Gustafson-Kessel FCM (GK-FCM)**: For detecting clusters of different geometric shapes (ellipsoidal clusters)
-- **Kernel FCM (KFCM)**: For handling non-linearly separable clusters in the original space
-- **Modified Kernel FCM (MKFCM)**: For improved handling of non-linearly separable clusters with better convergence properties
+## Contact
 
-## Parameter Tuning
-
-- **m value (1.1-3.0)**: Controls the fuzziness of membership assignments
-  - Lower values (closer to 1) create more crisp boundaries
-  - Higher values create softer boundaries with more overlap
-  
-- **σ² value (0.1-100.0)**: Controls the width of the Gaussian kernel
-  - Lower values make the algorithm more sensitive to local structures
-  - Higher values create smoother decision boundaries
-
-## Examples
-
-The `examples` directory contains sample scripts demonstrating how to use these algorithms with different datasets:
-
-- `compare_algorithms.py`: Compares both algorithms on blob-shaped and moon-shaped datasets
-
-## Code Structure and Development Guide
-
-### Project Structure
-
-- **Algorithm Implementations**:
-  - `kmeans_clustering.py`: K-means implementation (wrapper around scikit-learn)
-  - `fcm_clustering.py`: Fuzzy C-Means implementation
-  - `gkfcm_clustering.py`: Gustafson-Kessel FCM implementation
-  - `kfcm_clustering.py`: Kernel FCM implementation
-  - `mkfcm_clustering.py`: Modified Kernel FCM implementation
-
-- **Core components**:
-  - `data_loader.py`: Loads and preprocesses the Mall Customers dataset
-  - `run.py`: Main script that runs all experiments and generates visualizations
-  - `visualization.py`: Functions for creating plots and visualizations
-
-
-
-
-## Detailed File-by-File Guide
-
-For teammates completely new to this codebase, here's a detailed breakdown of each file:
-
-### Core Files
-
-#### `run.py`
-The main execution script that orchestrates all experiments and visualizations.
-- **Key Functions**:
-  - `main()`: Entry point that runs all experiments sequentially
-  - `run_kmeans_fcm_comparison()`: Compares K-means and FCM algorithms
-  - `run_fcm_m_comparison()`: Studies the effect of the fuzzy coefficient m
-  - `run_kmeans_init_comparison()`: Compares K-means initialization methods
-  - `run_fcm_gkfcm_comparison()`: Compares FCM and GK-FCM algorithms
-  - `run_all_fuzzy_comparison()`: Compares all fuzzy algorithms
-  - `run_kernel_sigma_comparison()`: Studies the effect of the kernel width parameter σ²
-- **Outputs**: Creates all visualization files in the root directory
-- **How to Use**: Simply run `python run.py` to execute all experiments
-
-#### `data_loader.py`
-Loads and preprocesses the Mall Customers dataset.
-- **Key Functions**:
-  - `load_mall_customers_data()`: Loads data, creates 2D and 3D feature sets, and performs normalization
-- **Returns**: Original dataframe, 2D features, 3D features, and scalers for inverse transformation
-- **Note**: Expects "Mall_Customers.csv" file in the project directory
-
-#### `visualization.py`
-Contains all visualization functions for creating plots and charts.
-- **Key Functions**:
-  - `plot_clusters_2d()` / `plot_clusters_3d()`: Create cluster visualizations
-  - `compare_kmeans_fcm()`: Side-by-side comparison of two algorithms
-  - `plot_fcm_m_comparison()`: Visualize the effect of the m parameter
-  - `plot_convergence_curves()`: Show algorithm convergence over iterations
-  - `compare_fuzzy_metrics()`: Compare metrics across algorithms with bar charts
-  - `compare_fuzzy_metrics_with_error_bars()`: Enhanced comparison with statistical error bars
-  - `plot_sigma_parameter_study()`: Analyze the effect of σ² parameter with trend lines
-- **Dependencies**: Requires matplotlib and numpy
-
-### Algorithm Implementations
-
-#### `kmeans_clustering.py`
-K-means implementation (wrapper around scikit-learn).
-- **Key Methods**:
-  - `__init__()`: Initialize with n_clusters, init_method, etc.
-  - `fit(data)`: Run clustering and return labels
-  - `predict(data)`: Predict cluster for new data
-  - `compute_fitness(data)`: Calculate inertia (within-cluster sum of squares)
-  - `get_centroids()`: Return final cluster centers
-- **Note**: No real convergence history is available from scikit-learn's implementation
-
-#### `fcm_clustering.py`
-Fuzzy C-Means implementation.
-- **Key Methods**:
-  - `fit(data)`: Run FCM algorithm with membership updates
-  - `update_centroids()`: Calculate new centroids based on fuzzy memberships
-  - `update_membership()`: Update membership matrix
-  - `_calculate_inertia()`: Calculate fuzzy inertia objective function
-  - `get_fitness_history()`: Return convergence history for visualization
-- **Parameters**: n_clusters, m (fuzziness coefficient), max_iter, tolerance
-
-#### `gkfcm_clustering.py`
-Gustafson-Kessel FCM that can detect non-spherical clusters.
-- **Key Methods**: 
-  - Similar to FCM but adds:
-  - `update_covariance_matrices()`: Calculate cluster-specific covariance
-  - `calculate_mahalanobis_distance()`: Distance measure for elliptical clusters
-  - `calculate_norm_matrices()`: Normalization factors for covariance
-- **Difference from FCM**: Uses Mahalanobis distance instead of Euclidean distance
-
-#### `kfcm_clustering.py`
-Kernel Fuzzy C-Means for non-linearly separable clusters.
-- **Key Methods**:
-  - `gaussian_kernel()`: Implements Gaussian kernel function
-  - `fit(data)`: Runs the kernelized version of FCM
-  - `update_centroids_kernel()`: Updates centroids in kernel space
-- **Parameters**: Adds sigma_squared (kernel width parameter)
-
-#### `mkfcm_clustering.py`
-Modified Kernel FCM with improved convergence.
-- **Key Methods**:
-  - Similar to KFCM but with modified objective function
-  - Different update rules for centroids and memberships
-- **Difference from KFCM**: Centroids are computed in feature space first
-
-### Data and Examples
-
-#### `Mall_Customers.csv`
-The main dataset used for all experiments.
-- **Features**:
-  - "CustomerID"
-  - "Gender"
-  - "Age"
-  - "Annual Income (k$)"
-  - "Spending Score (1-100)"
-- **Used Features for Clustering**:
-  - 2D: "Annual Income" and "Spending Score"
-  - 3D: "Age", "Annual Income", and "Spending Score"
-
-### Code Relationships and Flow
-
-1. `run.py` begins execution and calls `data_loader.py` to get the dataset
-2. It then runs each experiment function, which:
-   - Initializes algorithm instances from the appropriate clustering files
-   - Runs multiple iterations with different random seeds
-   - Collects metrics and results
-3. For each experiment, it calls visualization functions from `visualization.py`
-4. All results are saved as image files in the project directory
-
-
-
+For questions or feedback, please open an issue on the GitHub repository or contact the maintainer.
